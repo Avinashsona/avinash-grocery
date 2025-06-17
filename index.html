@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avinash Sona - Grocery List</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript" crossorigin="anonymous"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .made-with-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 50px;
+            background: linear-gradient(90deg, #4e65ff 0%, #6e8ffb 100%);
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(78, 101, 255, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .heart-icon {
+            display: inline-block;
+            margin-left: 6px;
+            color: #ff3c3c;
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .profile-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e0e7ff;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid white;
+            margin: 0 auto 20px;
+            display: block;
+            object-fit: cover;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: #f0f0f0;
+            max-width: 100%;
+            image-rendering: auto;
+            -webkit-border-radius: 50%;
+            -moz-border-radius: 50%;
+        }
+
+        .profile-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 5px;
+        }
+
+        .profile-title {
+            color: #64748b;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px 20px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+            min-width: 120px;
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .scanner-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+
+        #qr-reader {
+            width: 300px;
+            height: 200px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #667eea;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .item {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .item.selected {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+        }
+
+        .item.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #10b981;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .item-info {
+            margin-bottom: 15px;
+        }
+
+        .edit-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #5a67d8;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .item-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .item-barcode {
+            font-size: 12px;
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quantity-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quantity-btn:hover {
+            background: #5a67d8;
+            transform: scale(1.1);
+        }
+
+        .quantity-display {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .selected-items {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .selected-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .selected-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 20px 0;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .total-amount {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .total-label {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #94a3b8;
+            padding: 5px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .scanner-status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .scanner-status.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .scanner-status.error {
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .scanner-status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            .container {
+                padding: 20px 15px;
+            }
+
+            .profile-photo {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
+
+            .profile-name {
+                font-size: 20px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-number {
+                font-size: 20px;
+            }
+
+            .items-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .item-card {
+                padding: 15px;
+            }
+
+            .tabs {
+                overflow-x: auto;
+                padding: 2px;
+            }
+
+            .tab {
+                padding: 10px 15px;
+                font-size: 14px;
+                min-width: 100px;
+            }
+
+            #qr-reader {
+                width: 250px;
+                height: 180px;
+            }
+
+            .action-buttons {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+
+            .total-amount {
+                font-size: 24px;
+            }
+
+            .modal-content {
+                padding: 20px;
+                width: 95%;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                background: white;
+            }
+
+            .tabs, .scanner-container, .action-buttons {
+                display: none;
+            }
+
+            .tab-content {
+                display: block !important;
+            }
+
+            .item-card {
+                break-inside: avoid;
+                margin-bottom: 10px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            z-index: 1001;
+            animation: slideInRight 0.3s ease;
+            max-width: 300px;
+        }
+
+        .notification.error {
+            background: #ef4444;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+        }
+
+        .notification.info {
+            background: #3b82f6;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Enhanced Scanner Styles */
+        .scanner-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .scanner-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #667eea;
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .scanner-btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .scanner-btn.danger {
+            background: #ef4444;
+        }
+
+        .scanner-btn.danger:hover {
+            background: #dc2626;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Made with Badge -->
+        <div class="made-with-badge">
+            Made With Avinash_Sona <span class="heart-icon">❤️</span>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="profile-section">
+            <img src="https://firebasestorage.googleapis.com/v0/b/the-bhilai-report-by-avinash.firebasestorage.app/o/quality_restoration_20250527015428730.jpg?alt=media&token=8336a034-60f5-4acc-b845-52d2c4826d86" alt="Avinash Sona" class="profile-photo">
+            <h1 class="profile-name">Avinash Sona</h1>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalItems">55</div>
+                <div class="stat-label">कुल आइटम</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="selectedCount">0</div>
+                <div class="stat-label">चुने गए आइटम</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalValue">₹0</div>
+                <div class="stat-label">कुल राशि</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgPrice">₹0</div>
+                <div class="stat-label">औसत कीमत</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('scanner')">🔍 स्कैन करें</div>
+            <div class="tab" onclick="switchTab('items')">📋 सभी आइटम</div>
+            <div class="tab" onclick="switchTab('selected')">🛒 चुने गए आइटम</div>
+            <div class="tab" onclick="switchTab('manage')">⚙️ प्रबंधन</div>
+        </div>
+
+        <!-- Scanner Tab -->
+        <div id="scanner" class="tab-content active">
+            <div class="scanner-container">
+                <h3 style="margin-bottom: 15px; color: #1e293b;">बारकोड स्कैन करें</h3>
+                <div id="qr-reader"></div>
+                <div class="scanner-controls">
+                    <button class="scanner-btn" onclick="startScanning()">स्कैन शुरू करें</button>
+                    <button class="scanner-btn danger" onclick="stopScanning()">स्कैन बंद करें</button>
+                </div>
+                <div id="scannerStatus" class="scanner-status info" style="display: none;">
+                    कैमरा तैयार हो रहा है...
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Tab -->
+        <div id="items" class="tab-content">
+            <div class="search-container">
+                <input type="text" id="searchInput" class="search-input" placeholder="आइटम खोजें..." oninput="searchItems(this.value)">
+                <span class="search-icon">🔍</span>
+            </div>
+            <div id="allItemsList" class="items-grid"></div>
+        </div>
+
+        <!-- Selected Items Tab -->
+        <div id="selected" class="tab-content">
+            <div id="selectedItemsList" class="selected-items">
+                <div class="empty-state">
+                    <div class="empty-state-icon">🛒</div>
+                    <h3>कोई आइटम नहीं चुना गया</h3>
+                    <p>आइटम जोड़ने के लिए स्कैन करें या आइटम लिस्ट से चुनें</p>
+                </div>
+            </div>
+            
+            <div class="total-section">
+                <div class="total-amount" id="totalDisplay">₹0</div>
+                <div class="total-label">कुल राशि</div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="generatePDF()">
+                    📄 PDF डाउनलोड करें
+                </button>
+                <button class="btn btn-secondary" onclick="exportData()">
+                    💾 डेटा एक्सपोर्ट करें
+                </button>
+                <button class="btn btn-danger" onclick="clearAll()">
+                    🗑️ सभी साफ़ करें
+                </button>
+            </div>
+        </div>
+
+        <!-- Management Tab -->
+        <div id="manage" class="tab-content">
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="openAddItemModal()">
+                    ➕ नया आइटम जोड़ें
+                </button>
+                <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+                    📂 डेटा इम्पोर्ट करें
+                </button>
+                <button class="btn btn-secondary" onclick="exportData()">
+                    💾 डेटा एक्सपोर्ट करें
+                </button>
+                <button class="btn btn-danger" onclick="resetAllData()">
+                    🔄 सभी डेटा रीसेट करें
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Item Modal -->
+    <div id="addItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">नया आइटम जोड़ें</h2>
+                <button class="close-btn" onclick="closeAddItemModal()">&times;</button>
+            </div>
+            <form onsubmit="addNewItem(event)">
+                <div class="form-group">
+                    <label class="form-label">आइटम का नाम *</label>
+                    <input type="text" id="newItemName" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">कीमत (₹) *</label>
+                    <input type="number" id="newItemPrice" class="form-input" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">बारकोड (वैकल्पिक)</label>
+                    <input type="text" id="newItemBarcode" class="form-input">
+                </div>
+                <div class="action-buttons">
+                    <button type="submit" class="btn btn-primary" onclick="addNewItem(event)">जोड़ें</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAddItemModal()">रद्द करें</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden file input for import -->
+    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImport(event)">
+
+    <script>
+        // Enhanced grocery items list with barcodes
+        let allItems = [
+            { name: "Sugar", price: 48, barcode: "1234567890123" },
+            { name: "Tea Leaf", price: 410, barcode: "2345678901234" },
+            { name: "Wheat Flour (आटा)", price: 40, barcode: "3456789012345" },
+            { name: "Refined Oil", price: 140, barcode: "4567890123456" },
+            { name: "Mustard Oil", price: 160, barcode: "5678901234567" },
+            { name: "Bath Soap", price: 120, barcode: "6789012345678" },
+            { name: "Surf Excel", price: 125, barcode: "7890123456789" },
+            { name: "Poha", price: 52, barcode: "8901234567890" },
+            { name: "Suji", price: 54, barcode: "9012345678901" },
+            { name: "Soya Chunks", price: 129, barcode: "0123456789012" },
+            { name: "Coconut Hair Oil", price: 371, barcode: "1122334455667" },
+            { name: "Toor Dal", price: 160, barcode: "2233445566778" },
+            { name: "Moong Dal", price: 120, barcode: "3344556677889" },
+            { name: "Masoor Dal", price: 120, barcode: "4455667788990" },
+            { name: "White Urad Dal", price: 120, barcode: "5566778899001" },
+            { name: "White Peas", price: 140, barcode: "6677889900112" },
+            { name: "Desi Chana", price: 100, barcode: "7788990011223" },
+            { name: "Green Moong", price: 120, barcode: "8899001122334" },
+            { name: "Shampoo", price: 80, barcode: "9900112233445" },
+            { name: "Tomato Sauce", price: 80, barcode: "0011223344556" },
+            { name: "Mixed Fruit Jam", price: 180, barcode: "1111222233334" },
+            { name: "Chilli Powder", price: 320, barcode: "2222333344445" },
+            { name: "Turmeric Powder", price: 300, barcode: "3333444455556" },
+            { name: "Coriander Powder", price: 210, barcode: "4444555566667" },
+            { name: "Agarbatti", price: 25, barcode: "5555666677778" },
+            { name: "Dhup", price: 30, barcode: "6666777788889" },
+            { name: "Cotton", price: 40, barcode: "7777888899990" },
+            { name: "Face Cream", price: 85, barcode: "8888999900001" },
+            { name: "Boroplus", price: 65, barcode: "9999000011112" },
+            { name: "Razor Blade", price: 25, barcode: "0000111122223" },
+            { name: "Face Powder", price: 120, barcode: "1010101010101" },
+            { name: "Camphor", price: 50, barcode: "2020202020202" },
+            { name: "Cumin Seeds", price: 320, barcode: "3030303030303" },
+            { name: "Mustard Seeds", price: 180, barcode: "4040404040404" },
+            { name: "Raw Peanuts", price: 120, barcode: "5050505050505" },
+            { name: "Perfume", price: 250, barcode: "6060606060606" },
+            { name: "Hand Wash", price: 110, barcode: "7070707070707" },
+            { name: "Antiseptic Liquid", price: 150, barcode: "8080808080808" },
+            { name: "Black Pepper", price: 500, barcode: "9090909090909" },
+            { name: "Cardamom", price: 800, barcode: "1212121212121" },
+            { name: "Cloves", price: 600, barcode: "1313131313131" },
+            { name: "Sabudana", price: 80, barcode: "1414141414141" },
+            { name: "Daliya", price: 60, barcode: "1515151515151" },
+            { name: "Pasta", price: 120, barcode: "1616161616161" },
+            { name: "Noodles", price: 100, barcode: "1717171717171" },
+            { name: "Papad", price: 80, barcode: "1818181818181" },
+            { name: "Vermicelli", price: 90, barcode: "1919191919191" },
+            { name: "Besan", price: 100, barcode: "2121212121212" },
+            { name: "Maida", price: 100, barcode: "2222222222222" },
+            { name: "Rice (चावल)", price: 80, barcode: "2323232323232" },
+            { name: "Salt (नमक)", price: 25, barcode: "2424242424242" },
+            { name: "Onion (प्याज)", price: 40, barcode: "2525252525252" },
+            { name: "Potato (आलू)", price: 30, barcode: "2626262626262" },
+            { name: "Tomato (टमाटर)", price: 60, barcode: "2727272727272" },
+            { name: "Milk (दूध)", price: 55, barcode: "2828282828282" },
+            { name: "Bread (ब्रेड)", price: 25, barcode: "2929292929292" },
+            { name: "Biscuits", price: 50, barcode: "3131313131313" },
+            { name: "Toothpaste", price: 60, barcode: "3232323232323" }
+        ];
+
+        let selectedItems = {};
+        let filteredItems = [...allItems];
+        let html5QrCode = null;
+        let isScanning = false;
+
+        // Audio Context for sound effects
+        let audioContext = null;
+
+        // Initialize audio context
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // Play click sound
+        function playClickSound() {
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        // Play scan success sound
+        function playScanSound() {
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5 note
+            oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5 note
+            oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5 note
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.3);
+        }
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('groceryData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                selectedItems = data.selectedItems || {};
+                allItems = data.allItems || allItems;
+            }
+            filteredItems = [...allItems];
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('groceryData', JSON.stringify({
+                selectedItems,
+                allItems
+            }));
+        }
+
+        // Switch between tabs
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+            
+            // Stop scanning when switching away from scanner tab
+            if (tabName !== 'scanner' && isScanning) {
+                stopScanning();
+            }
+        }
+
+        // Render all items - ORIGINAL STYLE
+        function renderItems() {
+            const container = document.getElementById('allItemsList');
+            const searchTerm = document.getElementById('searchInput') ? document.getElementById('searchInput').value.toLowerCase() : '';
+            
+            filteredItems = allItems.filter(item => 
+                item.name.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>कोई आइटम नहीं मिला</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredItems.map(item => {
+                const isSelected = selectedItems[item.name];
+                const selectedClass = isSelected ? 'selected' : '';
+                const quantity = isSelected ? isSelected.quantity : 0;
+
+                return `
+                    <div class="item ${selectedClass}" onclick="toggleItem('${item.name}', ${item.price})">
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-price">₹${item.price}</div>
+                            <div class="item-barcode">${item.barcode}</div>
+                        </div>
+                        ${isSelected ? `
+                            <div class="quantity-controls" onclick="event.stopPropagation()">
+                                <button class="quantity-btn" onclick="changeQuantity('${item.name}', ${item.price}, -1)">-</button>
+                                <span class="quantity-display">${quantity}</span>
+                                <button class="quantity-btn" onclick="changeQuantity('${item.name}', ${item.price}, 1)">+</button>
+                            </div>
+                        ` : ''}
+                        <div class="edit-controls">
+                            <button class="btn-small btn-edit" onclick="event.stopPropagation(); editItem('${item.name}')">Edit</button>
+                            <button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteItem('${item.name}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle item selection - SINGLE CLICK TO SELECT/DESELECT
+        function toggleItem(name, price) {
+            playClickSound();
+            
+            if (selectedItems[name]) {
+                // If already selected, remove from cart
+                delete selectedItems[name];
+            } else {
+                // If not selected, add to cart with quantity 1
+                selectedItems[name] = {
+                    price: price,
+                    quantity: 1
+                };
+            }
+            
+            saveData();
+            renderItems();
+            updateSelectedList();
+            updateTotal();
+            updateStats();
+        }
+
+        // Change quantity
+        function changeQuantity(name, price, change) {
+            playClickSound();
+            
+            if (!selectedItems[name]) {
+                selectedItems[name] = { price: price, quantity: 0 };
+            }
+            
+            selectedItems[name].quantity += change;
+            
+            if (selectedItems[name].quantity <= 0) {
+                delete selectedItems[name];
+            }
+            
+            saveData();
+            renderItems();
+            updateSelectedList();
+            updateTotal();
+            updateStats();
+        }
+
+        // Update selected items list
+        function updateSelectedList() {
+            const container = document.getElementById('selectedItemsList');
+            const items = Object.keys(selectedItems);
+            
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🛒</div>
+                        <h3>कोई आइटम नहीं चुना गया</h3>
+                        <p>आइटम जोड़ने के लिए स्कैन करें या आइटम लिस्ट से चुनें</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = items.map(name => {
+                const item = selectedItems[name];
+                const total = item.price * item.quantity;
+                return `
+                    <div class="selected-item">
+                        <div>
+                            <strong>${name}</strong><br>
+                            <small>₹${item.price} × ${item.quantity} = ₹${total}</small>
+                        </div>
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="changeQuantity('${name}', ${item.price}, -1)">-</button>
+                            <span class="quantity-display">${item.quantity}</span>
+                            <button class="quantity-btn" onclick="changeQuantity('${name}', ${item.price}, 1)">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update total amount
+        function updateTotal() {
+            const total = Object.values(selectedItems).reduce((sum, item) => {
+                return sum + (item.price * item.quantity);
+            }, 0);
+            
+            document.getElementById('totalDisplay').textContent = `₹${total}`;
+        }
+
+        // Update statistics
+        function updateStats() {
+            const selectedCount = Object.values(selectedItems).reduce((sum, item) => sum + item.quantity, 0);
+            const totalValue = Object.values(selectedItems).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const avgPrice = selectedCount > 0 ? Math.round(totalValue / selectedCount) : 0;
+            
+            document.getElementById('totalItems').textContent = allItems.length;
+            document.getElementById('selectedCount').textContent = selectedCount;
+            document.getElementById('totalValue').textContent = `₹${totalValue}`;
+            document.getElementById('avgPrice').textContent = `₹${avgPrice}`;
+        }
+
+        // Search items
+        function searchItems(query) {
+            if (!query.trim()) {
+                filteredItems = [...allItems];
+            } else {
+                filteredItems = allItems.filter(item => 
+                    item.name.toLowerCase().includes(query.toLowerCase()) ||
+                    item.barcode.includes(query)
+                );
+            }
+            renderItems();
+        }
+
+        // Scanner functions
+        function startScanning() {
+            if (isScanning) return;
+            
+            const statusElement = document.getElementById('scannerStatus');
+            statusElement.style.display = 'block';
+            statusElement.className = 'scanner-status info';
+            statusElement.textContent = 'कैमरा शुरू हो रहा है...';
+            
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("qr-reader");
+            }
+            
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    const cameraId = devices[0].id;
+                    
+                    html5QrCode.start(
+                        cameraId,
+                        {
+                            fps: 10,
+                            qrbox: { width: 200, height: 150 }
+                        },
+                        (decodedText, decodedResult) => {
+                            handleScanSuccess(decodedText);
+                        },
+                        (errorMessage) => {
+                            // console.log(`QR Code scan error: ${errorMessage}`);
+                        }
+                    ).then(() => {
+                        isScanning = true;
+                        statusElement.className = 'scanner-status success';
+                        statusElement.textContent = 'स्कैनिंग सक्रिय - बारकोड को कैमरे के सामने रखें';
+                    }).catch(err => {
+                        statusElement.className = 'scanner-status error';
+                        statusElement.textContent = 'कैमरा शुरू करने में त्रुटि: ' + err;
+                    });
+                } else {
+                    statusElement.className = 'scanner-status error';
+                    statusElement.textContent = 'कोई कैमरा नहीं मिला';
+                }
+            }).catch(err => {
+                statusElement.className = 'scanner-status error';
+                statusElement.textContent = 'कैमरा एक्सेस की अनुमति नहीं मिली';
+            });
+        }
+
+        function stopScanning() {
+            if (!isScanning || !html5QrCode) return;
+            
+            html5QrCode.stop().then(() => {
+                isScanning = false;
+                const statusElement = document.getElementById('scannerStatus');
+                statusElement.style.display = 'none';
+                showNotification('स्कैनिंग बंद कर दी गई', 'info');
+            }).catch(err => {
+                console.error('Error stopping scanner:', err);
+            });
+        }
+
+        function handleScanSuccess(decodedText) {
+            playScanSound();
+            
+            const item = allItems.find(item => item.barcode === decodedText);
+            if (item) {
+                if (selectedItems[item.name]) {
+                    selectedItems[item.name].quantity += 1;
+                } else {
+                    selectedItems[item.name] = {
+                        price: item.price,
+                        quantity: 1
+                    };
+                }
+                
+                saveData();
+                renderItems();
+                updateSelectedList();
+                updateTotal();
+                updateStats();
+                
+                showNotification(`${item.name} जोड़ा गया!`, 'success');
+                
+                // Auto switch to selected items tab
+                setTimeout(() => {
+                    switchTab('selected');
+                    document.querySelector('.tab[onclick="switchTab(\'selected\')"]').classList.add('active');
+                }, 1000);
+            } else {
+                showNotification('बारकोड नहीं मिला!', 'error');
+            }
+        }
+
+        // Notification function
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Edit item function
+        function editItem(name) {
+            const item = allItems.find(item => item.name === name);
+            if (!item) return;
+            
+            document.getElementById('newItemName').value = item.name;
+            document.getElementById('newItemPrice').value = item.price;
+            document.getElementById('newItemBarcode').value = item.barcode;
+            
+            // Change modal title and button for editing
+            document.querySelector('.modal-title').textContent = 'आइटम एडिट करें';
+            document.querySelector('button[type="submit"]').textContent = 'अपडेट करें';
+            document.querySelector('button[type="submit"]').setAttribute('onclick', `updateItem('${name}')`);
+            
+            openAddItemModal();
+        }
+
+        // Delete item function
+        function deleteItem(name) {
+            if (confirm(`क्या आप "${name}" को डिलीट करना चाहते हैं?`)) {
+                allItems = allItems.filter(item => item.name !== name);
+                delete selectedItems[name];
+                filteredItems = [...allItems];
+                
+                saveData();
+                renderItems();
+                updateSelectedList();
+                updateTotal();
+                updateStats();
+                
+                showNotification('आइटम डिलीट हो गया!', 'success');
+            }
+        }
+
+        // Update item function
+        function updateItem(originalName) {
+            const name = document.getElementById('newItemName').value.trim();
+            const price = parseInt(document.getElementById('newItemPrice').value);
+            let barcode = document.getElementById('newItemBarcode').value.trim();
+            
+            if (!barcode) {
+                barcode = Date.now().toString();
+            }
+            
+            const itemIndex = allItems.findIndex(item => item.name === originalName);
+            if (itemIndex !== -1) {
+                allItems[itemIndex] = { name, price, barcode };
+                
+                // Update selected items if name changed
+                if (originalName !== name && selectedItems[originalName]) {
+                    selectedItems[name] = selectedItems[originalName];
+                    delete selectedItems[originalName];
+                }
+                
+                filteredItems = [...allItems];
+                saveData();
+                renderItems();
+                updateSelectedList();
+                updateTotal();
+                updateStats();
+                closeAddItemModal();
+                
+                showNotification('आइटम अपडेट हो गया!', 'success');
+            }
+        }
+
+        // Add new item modal functions
+        function openAddItemModal() {
+            // Reset modal for adding new item
+            document.querySelector('.modal-title').textContent = 'नया आइटम जोड़ें';
+            document.querySelector('button[type="submit"]').textContent = 'जोड़ें';
+            document.querySelector('button[type="submit"]').setAttribute('onclick', 'addNewItem(event)');
+            
+            document.getElementById('addItemModal').classList.add('active');
+        }
+
+        function closeAddItemModal() {
+            document.getElementById('addItemModal').classList.remove('active');
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemPrice').value = '';
+            document.getElementById('newItemBarcode').value = '';
+        }
+
+        function addNewItem(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('newItemName').value.trim();
+            const price = parseInt(document.getElementById('newItemPrice').value);
+            let barcode = document.getElementById('newItemBarcode').value.trim();
+            
+            if (!barcode) {
+                barcode = Date.now().toString();
+            }
+            
+            // Check if item already exists
+            if (allItems.find(item => item.name.toLowerCase() === name.toLowerCase())) {
+                showNotification('यह आइटम पहले से मौजूद है!', 'error');
+                return;
+            }
+            
+            const newItem = { name, price, barcode };
+            allItems.push(newItem);
+            filteredItems = [...allItems];
+            
+            saveData();
+            renderItems();
+            updateStats();
+            closeAddItemModal();
+            
+            showNotification('नया आइटम जोड़ा गया!', 'success');
+        }
+
+        // Export data
+        function exportData() {
+            const data = {
+                allItems,
+                selectedItems,
+                exportDate: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `grocery-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('डेटा एक्सपोर्ट हो गया!', 'success');
+        }
+
+        // Import data
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.allItems) {
+                        allItems = data.allItems;
+                        filteredItems = [...allItems];
+                    }
+                    
+                    if (data.selectedItems) {
+                        selectedItems = data.selectedItems;
+                    }
+                    
+                    saveData();
+                    renderItems();
+                    updateSelectedList();
+                    updateTotal();
+                    updateStats();
+                    
+                    showNotification('डेटा इम्पोर्ट हो गया!', 'success');
+                } catch (error) {
+                    showNotification('डेटा इम्पोर्ट में त्रुटि!', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // Clear all selected items
+        function clearAll() {
+            if (Object.keys(selectedItems).length === 0) {
+                showNotification('कोई आइटम चुना नहीं गया है!', 'error');
+                return;
+            }
+            
+            if (confirm('क्या आप सभी चुने गए आइटम को हटाना चाहते हैं?')) {
+                selectedItems = {};
+                saveData();
+                renderItems();
+                updateSelectedList();
+                updateTotal();
+                updateStats();
+                showNotification('सभी आइटम हटा दिए गए!', 'success');
+            }
+        }
+
+        // Reset all data
+        function resetAllData() {
+            if (confirm('क्या आप सभी डेटा को रीसेट करना चाहते हैं? यह सभी कस्टम आइटम और चुने गए आइटम को हटा देगा।')) {
+                localStorage.removeItem('groceryData');
+                location.reload();
+            }
+        }
+
+        // Enhanced PDF Generation with better design
+        async function generatePDF() {
+            const selectedItemsArray = Object.entries(selectedItems);
+            
+            if (selectedItemsArray.length === 0) {
+                showNotification('कोई आइटम चुना नहीं गया है!', 'error');
+                return;
+            }
+
+            // Show loading notification
+            showNotification('PDF तैयार हो रहा है...', 'info');
+
+            try {
+                // Method 1: Enhanced jsPDF with better design
+                if (window.jsPDF) {
+                    const { jsPDF } = window.jsPDF;
+                    const doc = new jsPDF();
+                    
+                    // Header with logo area
+                    doc.setFillColor(102, 126, 234);
+                    doc.rect(0, 0, 210, 40, 'F');
+                    
+                    // White text for header
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(28);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Avinash Sona', 20, 25);
+                    
+                    doc.setFontSize(14);
+                    doc.setFont('helvetica', 'normal');
+                    
+                    // Date and time section
+                    doc.setTextColor(0, 0, 0);
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    const currentDate = new Date();
+                    doc.text(`Date: ${currentDate.toLocaleDateString('hi-IN')}`, 20, 55);
+                    doc.text(`Time: ${currentDate.toLocaleTimeString('hi-IN')}`, 120, 55);
+                    doc.text(`Total Items: ${selectedItemsArray.length}`, 20, 65);
+                    
+                    // Draw line separator
+                    doc.setLineWidth(0.5);
+                    doc.line(20, 70, 190, 70);
+                    
+                    // Table header
+                    let yPosition = 85;
+                    doc.setFillColor(240, 240, 240);
+                    doc.rect(20, yPosition - 5, 170, 10, 'F');
+                    
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('Item Name', 25, yPosition);
+                    doc.text('Price', 110, yPosition);
+                    doc.text('Qty', 140, yPosition);
+                    doc.text('Total', 160, yPosition);
+                    
+                    yPosition += 15;
+                    
+                    // Items with alternating row colors
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    let totalAmount = 0;
+                    let rowIndex = 0;
+                    
+                    selectedItemsArray.forEach(([name, item]) => {
+                        const itemTotal = item.price * item.quantity;
+                        totalAmount += itemTotal;
+                        
+                        // Alternating row background
+                        if (rowIndex % 2 === 0) {
+                            doc.setFillColor(250, 250, 250);
+                            doc.rect(20, yPosition - 4, 170, 8, 'F');
+                        }
+                        
+                        // Truncate long item names
+                        const truncatedName = name.length > 35 ? name.substring(0, 32) + '...' : name;
+                        
+                        doc.setTextColor(0, 0, 0);
+                        doc.text(truncatedName, 25, yPosition);
+                        doc.text(`₹${item.price}`, 110, yPosition);
+                        doc.text(`${item.quantity}`, 145, yPosition);
+                        doc.text(`₹${itemTotal}`, 165, yPosition);
+                        
+                        yPosition += 10;
+                        rowIndex++;
+                        
+                        // Add new page if needed
+                        if (yPosition > 270) {
+                            doc.addPage();
+                            yPosition = 20;
+                            rowIndex = 0;
+                        }
+                    });
+                    
+                    // Total section with highlight
+                    yPosition += 5;
+                    doc.setFillColor(102, 126, 234);
+                    doc.rect(20, yPosition - 5, 170, 15, 'F');
+                    
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(14);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('TOTAL AMOUNT:', 25, yPosition + 5);
+                    doc.text(`₹${totalAmount}`, 140, yPosition + 5);
+                    
+                    // Footer
+                    yPosition += 25;
+                    doc.setTextColor(120, 120, 120);
+                    doc.setFontSize(9);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text('Generated by Avinash Sona Grocery App', 20, yPosition);
+                    doc.text(`Generated on: ${currentDate.toLocaleString('hi-IN')}`, 20, yPosition + 8);
+                    
+                    // Save with formatted filename
+                    const filename = `Avinash_Sona_Grocery_${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}.pdf`;
+                    doc.save(filename);
+                    
+                    showNotification('PDF सफलतापूर्वक डाउनलोड हो गया!', 'success');
+                    return;
+                }
+            } catch (error) {
+                console.log('jsPDF method failed, trying fallback methods...');
+            }
+
+            // Method 2: Create HTML file
+            try {
+                let totalAmount = 0;
+                const itemsHTML = selectedItemsArray.map(([name, item]) => {
+                    const itemTotal = item.price * item.quantity;
+                    totalAmount += itemTotal;
+                    return `<tr><td>${name}</td><td>₹${item.price}</td><td>${item.quantity}</td><td>₹${itemTotal}</td></tr>`;
+                }).join('');
+
+                const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Grocery List</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; }
+                        .header { text-align: center; margin-bottom: 20px; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                        th { background-color: #f2f2f2; }
+                        .total { font-weight: bold; background-color: #e7f3ff; }
+                        .footer { margin-top: 20px; text-align: center; color: #666; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Avinash Sona - Grocery List</h1>
+                        <p>Date: ${new Date().toLocaleDateString('hi-IN')} | Time: ${new Date().toLocaleTimeString('hi-IN')}</p>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr><th>Item Name</th><th>Price</th><th>Quantity</th><th>Total</th></tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHTML}
+                            <tr class="total"><td colspan="3"><strong>Total Amount</strong></td><td><strong>₹${totalAmount}</strong></td></tr>
+                        </tbody>
+                    </table>
+                    <div class="footer">
+                        <p>Generated by Avinash Sona Grocery App</p>
+                    </div>
+                </body>
+                </html>`;
+
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `grocery-list-${new Date().toISOString().split('T')[0]}.html`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showNotification('HTML file downloaded successfully!', 'success');
+                return;
+            } catch (error) {
+                console.log('HTML method failed, trying text fallback...');
+            }
+
+            // Method 3: Simple text file fallback
+            try {
+                let totalAmount = 0;
+                const textContent = `
+AVINASH SONA - GROCERY LIST
+===========================
+Date: ${new Date().toLocaleDateString('hi-IN')}
+Time: ${new Date().toLocaleTimeString('hi-IN')}
+
+ITEMS:
+------
+${selectedItemsArray.map(([name, item]) => {
+    const itemTotal = item.price * item.quantity;
+    totalAmount += itemTotal;
+    return `${name} - ₹${item.price} x ${item.quantity} = ₹${itemTotal}`;
+}).join('\n')}
+
+----------------------------
+TOTAL AMOUNT: ₹${totalAmount}
+----------------------------
+
+Generated by Avinash Sona Grocery App
+                `.trim();
+
+                const blob = new Blob([textContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `grocery-list-${new Date().toISOString().split('T')[0]}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showNotification('Text file downloaded successfully!', 'success');
+            } catch (error) {
+                showNotification('Download failed! Please try again.', 'error');
+                console.error('All download methods failed:', error);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('addItemModal');
+            if (event.target === modal) {
+                closeAddItemModal();
+            }
+        }
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            renderItems();
+            updateSelectedList();
+            updateTotal();
+            updateStats();
+        });
+
+        // Handle page unload to stop scanner
+        window.addEventListener('beforeunload', function() {
+            if (isScanning && html5QrCode) {
+                html5QrCode.stop();
+            }
+        });
+    </script>
+</body>
+</html>
