@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avinash Sona - Grocery List</title>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .made-with-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-radius: 50px;
+            background: linear-gradient(90deg, #4e65ff 0%, #6e8ffb 100%);
+            color: white;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 15px rgba(78, 101, 255, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .heart-icon {
+            display: inline-block;
+            margin-left: 6px;
+            color: #ff3c3c;
+            animation: heartbeat 2s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .profile-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 5px solid white;
+            margin: 0 auto 20px;
+            display: block;
+            object-fit: cover;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            background: #f0f0f0;
+            max-width: 100%;
+            image-rendering: auto;
+            -webkit-border-radius: 50%;
+            -moz-border-radius: 50%;
+        }
+
+        .header h1 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 25px 20px;
+        }
+
+        .section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .section h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+
+        .form-group {
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 48px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+            color: #333;
+        }
+
+        /* Barcode Scanner Styles */
+        .barcode-section {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0fff0 100%);
+            border: 2px solid #28a745;
+        }
+
+        .scanner-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .scanner-video {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            border-radius: 10px;
+            background: #000;
+            margin: 0 auto;
+            display: block;
+            object-fit: cover;
+        }
+
+        .scanner-overlay {
+            position: relative;
+            display: inline-block;
+            margin: 0 auto;
+        }
+
+        .scan-box {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 100px;
+            border: 3px solid #ff0000;
+            border-radius: 10px;
+            box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+
+        .scan-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff0000, transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0%, 100% { transform: translateY(-50px); opacity: 0; }
+            50% { transform: translateY(0); opacity: 1; }
+        }
+
+        .scanner-status {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+
+        .scanner-status.scanning {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .scanner-status.success {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .scanner-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .barcode-result {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 50px 15px 20px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 20px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .item.selected {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+            font-size: 16px;
+        }
+
+        .item-price {
+            color: #28a745;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: 15px;
+        }
+
+        .quantity-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .quantity {
+            min-width: 35px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 16px;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .edit-controls {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 11px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .selected-items {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .selected-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .selected-item-info {
+            flex: 1;
+        }
+
+        .selected-item-name {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .selected-item-details {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .selected-item-total {
+            font-weight: 700;
+            color: #28a745;
+            font-size: 1.1rem;
+        }
+
+        .total-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+        }
+
+        .total-label {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+            opacity: 0.9;
+        }
+
+        .total-amount {
+            font-size: clamp(2rem, 6vw, 3rem);
+            font-weight: 800;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .item {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .quantity-controls {
+                align-self: center;
+                margin-right: 0;
+            }
+
+            .edit-controls {
+                justify-content: center;
+            }
+
+            .profile-photo {
+                width: 100px;
+                height: 100px;
+            }
+
+            .main-content {
+                padding: 20px 15px;
+            }
+
+            .scanner-controls {
+                justify-content: center;
+            }
+        }
+
+        .suggestions-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e1e5e9;
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            display: none;
+        }
+
+        .suggestion-item {
+            padding: 12px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s ease;
+        }
+
+        .suggestion-item:hover {
+            background: #f8f9fa;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .suggestion-price {
+            color: #28a745;
+            font-size: 0.9em;
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 10000;
+            max-width: 300px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.warning {
+            background: #ffc107;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div class="made-with-badge">
+            Made With Avinash_Sona <span class="heart-icon">❤️</span>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <img src="https://firebasestorage.googleapis.com/v0/b/the-bhilai-report-by-avinash.firebasestorage.app/o/quality_restoration_20250527015428730.jpg?alt=media&token=8336a034-60f5-4acc-b845-52d2c4826d86" alt="Avinash Sona" class="profile-photo" onload="this.style.opacity='1'" onerror="this.style.display='none'" style="opacity: 0; transition: opacity 0.3s ease;">
+            <h1>Avinash Sona</h1>
+        </div>
+
+        <div class="main-content">
+            <!-- Statistics -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalItemsCount">0</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="selectedItemsCount">0</div>
+                    <div class="stat-label">Selected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">₹<span id="totalAmountDisplay">0</span></div>
+                    <div class="stat-label">Total Amount</div>
+                </div>
+            </div>
+
+            <!-- Barcode Scanner Section -->
+            <div class="section barcode-section">
+                <h3>📱 Barcode Scanner</h3>
+                <div class="scanner-controls">
+                    <button class="btn btn-primary" onclick="startBarcodeScanner()">📷 Start Scanning</button>
+                    <button class="btn btn-danger" onclick="stopBarcodeScanner()">⏹️ Stop Scanning</button>
+                    <button class="btn btn-warning" onclick="clearBarcodeResult()">🗑️ Clear Result</button>
+                </div>
+                
+                <div id="barcodeContainer" style="text-align: center; display: none; padding: 10px; overflow: hidden;">
+                    <div id="reader" style="width: 95%; max-width: 280px; height: 180px; margin: 0 auto; border: 2px solid #667eea; border-radius: 10px; position: relative; background: #000; overflow: hidden;"></div>
+                </div>
+                
+                <div id="barcodeStatus" class="scanner-status" style="display: none;">
+                    📱 Camera ready - Point barcode at the camera
+                </div>
+
+                <div id="barcodeResultDiv" style="display: none;">
+                    <div class="barcode-result">
+                        <strong>Scanned Barcode:</strong> <span id="barcodeResultText"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add New Item Section -->
+            <div class="section">
+                <h3>➕ Add New Item</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Item Name:</label>
+                        <div style="position: relative;">
+                            <input type="text" id="newItemName" placeholder="Type item name..." oninput="showSuggestions()" onfocus="showSuggestions()" onblur="hideSuggestions()">
+                            <div id="suggestions" class="suggestions-list"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Price:</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #28a745; font-weight: bold; font-size: 16px;">₹</span>
+                            <input type="number" id="newItemPrice" placeholder="Enter price" min="0" step="0.01" style="padding-left: 35px;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Barcode (Optional):</label>
+                        <input type="text" id="newItemBarcode" placeholder="Scan or enter barcode">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group" style="display: flex; align-items: end;">
+                        <button class="btn btn-primary" onclick="addNewItem()" style="width: 100%;">Add Item</button>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: end;">
+                        <button class="btn btn-warning" onclick="scanBarcodeForNewItem()" style="width: 100%;">📱 Scan Barcode</button>
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: end;">
+                        <button class="btn btn-danger" onclick="clearNewItemForm()" style="width: 100%;">🗑️ Clear Form</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weight Calculator Section -->
+            <div class="section">
+                <h3>⚖️ Weight Calculator</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rate per Kg (₹):</label>
+                        <input type="number" id="ratePerKg" placeholder="e.g. 150">
+                    </div>
+                    <div class="form-group">
+                        <label>Weight (in Grams):</label>
+                        <input type="number" id="weightInGrams" placeholder="e.g. 513">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: end;">
+                        <button class="btn btn-primary" onclick="calculateWeightPrice()">Calculate</button>
+                    </div>
+                </div>
+                <div class="total-section" style="margin-top: 10px;">
+                    <div class="total-label">Total Price:</div>
+                    <div class="total-amount" id="weightTotal">₹0.00</div>
+                </div>
+            </div>
+
+            <!-- Amount to Weight Calculator -->
+            <div class="section">
+                <h3>💰 ₹ से Weight Calculator</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Rate per Kg (₹):</label>
+                        <input type="number" id="rate" placeholder="e.g. 360">
+                    </div>
+                    <div class="form-group">
+                        <label>Amount You Want to Spend (₹):</label>
+                        <input type="number" id="amount" placeholder="e.g. 50">
+                    </div>
+                    <div class="form-group" style="display: flex; align-items: end;">
+                        <button class="btn btn-primary" onclick="calculateWeight()">Calculate</button>
+                    </div>
+                </div>
+                <div class="total-section" style="margin-top: 10px;">
+                    <div class="total-label">Approx Weight:</div>
+                    <div class="total-amount" id="result">0 grams</div>
+                </div>
+            </div>
+
+            <!-- Search Items -->
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 Search items..." oninput="filterItems()">
+                <span class="search-icon">🔍</span>
+            </div>
+
+            <!-- All Items List -->
+            <div class="section">
+                <h3>🛒 All Items (<span id="totalItems">0</span>)</h3>
+                <div id="itemsList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>No items available. Add some items to get started!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Items -->
+            <div class="section">
+                <h3>📝 Selected Items (<span id="selectedCount">0</span>)</h3>
+                <div id="selectedList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No items selected yet</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Section -->
+            <div class="total-section">
+                <div class="total-label">Total Amount:</div>
+                <div class="total-amount">₹<span id="totalAmount">0</span></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="buttons">
+                <button class="btn btn-success" onclick="generatePDF()">📄 Download PDF</button>
+                <button class="btn btn-whatsapp" onclick="shareOnWhatsApp()">📱 Share WhatsApp</button>
+                <button class="btn btn-danger" onclick="clearAll()">🗑️ Clear All</button>
+                <button class="btn btn-primary" onclick="exportData()">💾 Export Data</button>
+                <button class="btn btn-warning" onclick="importData()">📂 Import Data</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImport(event)">
+
+    <script>
+        // Sound Effects
+        let audioContext;
+        
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        // VERY LOUD BEEP SOUND for barcode scanning
+        function playBeepSound() {
+            initAudio();
+            
+            // Multiple oscillators for very loud beep
+            for(let i = 0; i < 3; i++) {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(1200 + (i * 200), audioContext.currentTime); // Different frequencies
+                gainNode.gain.setValueAtTime(1.0, audioContext.currentTime); // Maximum volume
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            }
+            
+            // Additional beep pattern for extra loudness
+            setTimeout(() => {
+                const oscillator2 = audioContext.createOscillator();
+                const gainNode2 = audioContext.createGain();
+                
+                oscillator2.connect(gainNode2);
+                gainNode2.connect(audioContext.destination);
+                
+                oscillator2.frequency.setValueAtTime(800, audioContext.currentTime);
+                gainNode2.gain.setValueAtTime(0.9, audioContext.currentTime);
+                gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator2.start(audioContext.currentTime);
+                oscillator2.stop(audioContext.currentTime + 0.3);
+            }, 200);
+        }
+        
+        // CLICK SOUND for item selection
+        function playClickSound() {
+            initAudio();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(400, audioContext.currentTime); // Lower frequency for click
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime); // Lower volume for click
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+
+        // Enhanced grocery items list with barcodes (copied from your file)
+        let allItems = [
+            { name: "Sugar", price: 48, barcode: "1234567890123" },
+            { name: "Tea Leaf", price: 410, barcode: "2345678901234" },
+            { name: "Wheat Flour (आटा)", price: 40, barcode: "3456789012345" },
+            { name: "Refined Oil", price: 140, barcode: "4567890123456" },
+            { name: "Mustard Oil", price: 160, barcode: "5678901234567" },
+            { name: "Bath Soap", price: 120, barcode: "6789012345678" },
+            { name: "Surf Excel", price: 125, barcode: "7890123456789" },
+            { name: "Poha", price: 52, barcode: "8901234567890" },
+            { name: "Suji", price: 54, barcode: "9012345678901" },
+            { name: "Soya Chunks", price: 129, barcode: "0123456789012" },
+            { name: "Coconut Hair Oil", price: 371, barcode: "1122334455667" },
+            { name: "Toor Dal", price: 160, barcode: "2233445566778" },
+            { name: "Moong Dal", price: 120, barcode: "3344556677889" },
+            { name: "Masoor Dal", price: 120, barcode: "4455667788990" },
+            { name: "White Urad Dal", price: 120, barcode: "5566778899001" },
+            { name: "White Peas", price: 140, barcode: "6677889900112" },
+            { name: "Desi Chana", price: 100, barcode: "7788990011223" },
+            { name: "Green Moong", price: 120, barcode: "8899001122334" },
+            { name: "Shampoo", price: 80, barcode: "9900112233445" },
+            { name: "Tomato Sauce", price: 80, barcode: "0011223344556" },
+            { name: "Mixed Fruit Jam", price: 180, barcode: "1111222233334" },
+            { name: "Chilli Powder", price: 320, barcode: "2222333344445" },
+            { name: "Turmeric Powder", price: 300, barcode: "3333444455556" },
+            { name: "Coriander Powder", price: 210, barcode: "4444555566667" },
+            { name: "Agarbatti", price: 25, barcode: "5555666677778" },
+            { name: "Dhup", price: 30, barcode: "6666777788889" },
+            { name: "Cotton", price: 40, barcode: "7777888899990" },
+            { name: "Face Cream", price: 85, barcode: "8888999900001" },
+            { name: "Boroplus", price: 65, barcode: "9999000011112" },
+            { name: "Razor Blade", price: 25, barcode: "0000111122223" },
+            { name: "Face Powder", price: 120, barcode: "1010101010101" },
+            { name: "Camphor", price: 50, barcode: "2020202020202" },
+            { name: "Cumin Seeds", price: 320, barcode: "3030303030303" },
+            { name: "Mustard Seeds", price: 180, barcode: "4040404040404" },
+            { name: "Raw Peanuts", price: 120, barcode: "5050505050505" },
+            { name: "Perfume", price: 250, barcode: "6060606060606" },
+            { name: "Hand Wash", price: 110, barcode: "7070707070707" },
+            { name: "Antiseptic Liquid", price: 150, barcode: "8080808080808" },
+            { name: "Black Pepper", price: 500, barcode: "9090909090909" },
+            { name: "Cardamom", price: 800, barcode: "1212121212121" },
+            { name: "Cloves", price: 600, barcode: "1313131313131" },
+            { name: "Sabudana", price: 80, barcode: "1414141414141" },
+            { name: "Daliya", price: 60, barcode: "1515151515151" },
+            { name: "Pasta", price: 120, barcode: "1616161616161" },
+            { name: "Noodles", price: 100, barcode: "1717171717171" },
+            { name: "Papad", price: 80, barcode: "1818181818181" },
+            { name: "Vermicelli", price: 90, barcode: "1919191919191" },
+            { name: "Besan", price: 100, barcode: "2121212121212" },
+            { name: "Maida", price: 100, barcode: "2222222222222" },
+            { name: "Rice (चावल)", price: 80, barcode: "2323232323232" },
+            { name: "Salt (नमक)", price: 25, barcode: "2424242424242" },
+            { name: "Onion (प्याज)", price: 40, barcode: "2525252525252" },
+            { name: "Potato (आलू)", price: 30, barcode: "2626262626262" },
+            { name: "Tomato (टमाटर)", price: 60, barcode: "2727272727272" },
+            { name: "Milk (दूध)", price: 55, barcode: "2828282828282" },
+            { name: "Bread (ब्रेड)", price: 25, barcode: "2929292929292" },
+            { name: "Biscuits", price: 50, barcode: "3131313131313" },
+            { name: "Toothpaste", price: 60, barcode: "3232323232323" }
+        ];
+
+        let selectedItems = {};
+        let filteredItems = [];
+        let barcodeScanner = null;
+        let scannerActive = false;
+        let scanningForNewItem = false;
+
+        // Initialize data from localStorage (but preserve predefined items)
+        function loadData() {
+            const savedSelected = localStorage.getItem('selectedItems');
+            
+            // Always keep the predefined items, don't load from localStorage
+            // This ensures all 55+ items are always available
+            
+            if (savedSelected) {
+                try {
+                    selectedItems = JSON.parse(savedSelected);
+                } catch (e) {
+                    console.log('Failed to load selected items');
+                }
+            }
+        }
+
+        // Save data to localStorage (only save selected items, not predefined items)
+        function saveData() {
+            // Don't save allItems to localStorage to preserve predefined 55+ items
+            localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type} show`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Barcode Scanner Functions
+        function startBarcodeScanner() {
+            const container = document.getElementById('barcodeContainer');
+            const status = document.getElementById('barcodeStatus');
+            
+            container.style.display = 'block';
+            status.style.display = 'block';
+            status.className = 'scanner-status scanning';
+            status.textContent = '📱 Starting camera...';
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                status.className = 'scanner-status error';
+                status.textContent = '❌ Camera not supported in this browser';
+                return;
+            }
+
+            try {
+                barcodeScanner = new Html5Qrcode("reader");
+                
+                // Try different camera configurations for better scanning
+                const cameraConfig = { 
+                    facingMode: "environment",
+                    advanced: [
+                        { focusMode: "continuous" },
+                        { exposureMode: "continuous" },
+                        { whiteBalanceMode: "continuous" }
+                    ]
+                };
+
+                barcodeScanner.start(
+                    { facingMode: "environment" },
+                    { 
+                        fps: 60, 
+                        qrbox: function(viewfinderWidth, viewfinderHeight) {
+                            // Smaller scanning area to stay within bounds
+                            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+                            return {
+                                width: Math.floor(minEdge * 0.7),
+                                height: Math.floor(minEdge * 0.4)
+                            };
+                        },
+                        aspectRatio: 1.777778,
+                        disableFlip: false,
+                        videoConstraints: {
+                            width: { min: 1280, ideal: 1920, max: 4096 },
+                            height: { min: 720, ideal: 1080, max: 2160 },
+                            focusMode: "continuous",
+                            facingMode: "environment"
+                        },
+                        experimentalFeatures: {
+                            useBarCodeDetectorIfSupported: true
+                        }
+                    },
+                    (decodedText) => {
+                        // LOUD BEEP ON SUCCESSFUL SCAN
+                        playBeepSound();
+                        handleBarcodeResult(decodedText);
+                    },
+                    (errorMessage) => {
+                        console.log("Scan error:", errorMessage);
+                    }
+                ).then(() => {
+                    scannerActive = true;
+                    status.textContent = '📱 Camera ready - Point barcode at the camera';
+                    showNotification('Scanner started successfully!', 'success');
+                }).catch((err) => {
+                    console.error("Scanner start failed:", err);
+                    status.className = 'scanner-status error';
+                    status.textContent = '❌ Failed to start camera. Please allow camera access.';
+                    container.style.display = 'none';
+                    showNotification('Failed to start scanner. Please allow camera access.', 'error');
+                });
+            } catch (err) {
+                console.error("Scanner initialization failed:", err);
+                status.className = 'scanner-status error';
+                status.textContent = '❌ Scanner not supported on this device';
+                showNotification('Scanner not supported on this device', 'error');
+            }
+        }
+
+        function handleBarcodeResult(barcode) {
+            document.getElementById('barcodeResultText').textContent = barcode;
+            document.getElementById('barcodeResultDiv').style.display = 'block';
+            
+            if (scanningForNewItem) {
+                document.getElementById('newItemBarcode').value = barcode;
+                document.getElementById('newItemName').focus();
+                
+                document.getElementById('barcodeStatus').className = 'scanner-status success';
+                document.getElementById('barcodeStatus').textContent = `✅ Barcode scanned: ${barcode}`;
+                
+                showNotification('Barcode scanned! Now enter product name and price.', 'success');
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200]);
+                }
+                
+                scanningForNewItem = false;
+                stopBarcodeScanner();
+                return;
+            }
+            
+            // Find exact barcode match
+            const foundItem = allItems.find(item => item.barcode === barcode);
+            
+            if (foundItem) {
+                toggleItem(foundItem.name, foundItem.price);
+                showNotification(`${foundItem.name} added to cart! Price: ₹${foundItem.price}`, 'success');
+                
+                document.getElementById('barcodeStatus').className = 'scanner-status success';
+                document.getElementById('barcodeStatus').textContent = `✅ Found: ${foundItem.name} - ₹${foundItem.price}`;
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200]);
+                }
+                
+                setTimeout(() => {
+                    stopBarcodeScanner();
+                }, 3000);
+            } else {
+                document.getElementById('newItemName').value = `Product-${barcode}`;
+                document.getElementById('newItemBarcode').value = barcode;
+                document.getElementById('newItemPrice').focus();
+                
+                showNotification('Product not found! Please add product details below.', 'error');
+                
+                document.getElementById('barcodeStatus').className = 'scanner-status error';
+                document.getElementById('barcodeStatus').textContent = `❌ Product not found for barcode: ${barcode}`;
+            }
+        }
+
+        function stopBarcodeScanner() {
+            const container = document.getElementById('barcodeContainer');
+            const status = document.getElementById('barcodeStatus');
+
+            if (scannerActive && barcodeScanner) {
+                barcodeScanner.stop().then(() => {
+                    console.log("Scanner stopped successfully");
+                    scannerActive = false;
+                    container.style.display = 'none';
+                    status.style.display = 'none';
+                    showNotification('Scanner stopped', 'success');
+                }).catch((err) => {
+                    console.error("Stop scanner failed:", err);
+                    showNotification('Failed to stop scanner', 'error');
+                });
+            } else {
+                container.style.display = 'none';
+                status.style.display = 'none';
+                showNotification('Scanner stopped', 'success');
+            }
+        }
+
+        function clearBarcodeResult() {
+            document.getElementById('barcodeResultDiv').style.display = 'none';
+            document.getElementById('barcodeResultText').textContent = '';
+        }
+
+        function scanBarcodeForNewItem() {
+            scanningForNewItem = true;
+            startBarcodeScanner();
+        }
+
+        // Weight Calculator Functions
+        function calculateWeightPrice() {
+            const rate = parseFloat(document.getElementById('ratePerKg').value);
+            const weight = parseFloat(document.getElementById('weightInGrams').value);
+            
+            if (!rate || !weight || rate <= 0 || weight <= 0) {
+                showNotification('Please enter valid rate and weight values', 'error');
+                return;
+            }
+            
+            const totalPrice = (rate * weight) / 1000;
+            document.getElementById('weightTotal').textContent = `₹${totalPrice.toFixed(2)}`;
+            playClickSound();
+            showNotification(`Price calculated: ₹${totalPrice.toFixed(2)}`, 'success');
+        }
+
+        function calculateWeight() {
+            const rate = parseFloat(document.getElementById('rate').value);
+            const amount = parseFloat(document.getElementById('amount').value);
+            
+            if (!rate || !amount || rate <= 0 || amount <= 0) {
+                showNotification('Please enter valid rate and amount values', 'error');
+                return;
+            }
+            
+            const weightInKg = amount / rate;
+            const weightInGrams = weightInKg * 1000;
+            
+            if (weightInGrams >= 1000) {
+                document.getElementById('result').textContent = `${weightInKg.toFixed(3)} kg`;
+            } else {
+                document.getElementById('result').textContent = `${weightInGrams.toFixed(0)} grams`;
+            }
+            
+            playClickSound();
+            showNotification(`Weight calculated successfully!`, 'success');
+        }
+
+        // Add new item
+        function addNewItem() {
+            const name = document.getElementById('newItemName').value.trim();
+            const price = parseFloat(document.getElementById('newItemPrice').value);
+            const barcode = document.getElementById('newItemBarcode').value.trim();
+
+            if (!name || !price || price <= 0) {
+                showNotification('Please enter valid item name and price', 'error');
+                return;
+            }
+
+            // Check if item already exists
+            const existingItem = allItems.find(item => item.name.toLowerCase() === name.toLowerCase());
+            if (existingItem) {
+                showNotification('Item already exists!', 'error');
+                return;
+            }
+
+            const newItem = {
+                name: name,
+                price: price,
+                barcode: barcode || null
+            };
+
+            allItems.push(newItem);
+            saveData();
+            renderItems();
+            updateStats();
+            clearNewItemForm();
+            showNotification('Item added successfully!', 'success');
+            playClickSound();
+        }
+
+        function clearNewItemForm() {
+            document.getElementById('newItemName').value = '';
+            document.getElementById('newItemPrice').value = '';
+            document.getElementById('newItemBarcode').value = '';
+        }
+
+        // Show suggestions while typing
+        function showSuggestions() {
+            const input = document.getElementById('newItemName').value.toLowerCase();
+            const suggestions = document.getElementById('suggestions');
+            
+            if (input.length < 2) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            const matches = allItems.filter(item => 
+                item.name.toLowerCase().includes(input)
+            ).slice(0, 5);
+
+            if (matches.length > 0) {
+                suggestions.innerHTML = matches.map(item => 
+                    `<div class="suggestion-item" onclick="selectSuggestion('${item.name}', ${item.price})">
+                        <div class="suggestion-name">${item.name}</div>
+                        <div class="suggestion-price">₹${item.price}</div>
+                    </div>`
+                ).join('');
+                suggestions.style.display = 'block';
+            } else {
+                suggestions.style.display = 'none';
+            }
+        }
+
+        function selectSuggestion(name, price) {
+            document.getElementById('newItemName').value = name;
+            document.getElementById('newItemPrice').value = price;
+            document.getElementById('suggestions').style.display = 'none';
+        }
+
+        function hideSuggestions() {
+            setTimeout(() => {
+                document.getElementById('suggestions').style.display = 'none';
+            }, 150);
+        }
+
+        // Render items list
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredItems = allItems.filter(item => 
+                item.name.toLowerCase().includes(searchTerm)
+            );
+
+            document.getElementById('totalItems').textContent = filteredItems.length;
+
+            if (filteredItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <p>No items found</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredItems.map(item => {
+                const isSelected = selectedItems[item.name];
+                const selectedClass = isSelected ? 'selected' : '';
+                const quantity = isSelected ? isSelected.quantity : 0;
+
+                return `
+                    <div class="item ${selectedClass}" onclick="toggleItem('${item.name}', ${item.price})">
+                        <div class="item-info">
+                            <div class="item-name">${item.name}</div>
+                            <div class="item-price">₹${item.price}</div>
+                        </div>
+                        ${isSelected ? `
+                            <div class="quantity-controls">
+                                <button class="quantity-btn" onclick="event.stopPropagation(); updateQuantity('${item.name}', ${quantity - 1})">-</button>
+                                <span class="quantity">${quantity}</span>
+                                <button class="quantity-btn" onclick="event.stopPropagation(); updateQuantity('${item.name}', ${quantity + 1})">+</button>
+                            </div>
+                        ` : ''}
+                        <div class="edit-controls">
+                            <button class="btn-small btn-edit" onclick="event.stopPropagation(); editItem('${item.name}')">Edit</button>
+                            <button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteItem('${item.name}')">Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle item selection
+        function toggleItem(name, price) {
+            playClickSound();
+            
+            if (selectedItems[name]) {
+                delete selectedItems[name];
+            } else {
+                selectedItems[name] = {
+                    price: price,
+                    quantity: 1
+                };
+            }
+            
+            saveData();
+            renderItems();
+            updateSelectedList();
+            updateTotal();
+            updateStats();
+        }
+
+        // Update quantity
+        function updateQuantity(name, newQuantity) {
+            playClickSound();
+            
+            if (newQuantity <= 0) {
+                delete selectedItems[name];
+            } else {
+                selectedItems[name].quantity = newQuantity;
+            }
+            
+            saveData();
+            renderItems();
+            updateSelectedList();
+            updateTotal();
+            updateStats();
+        }
+
+        // Filter items
+        function filterItems() {
+            renderItems();
+        }
+
+        // Update selected items list
+        function updateSelectedList() {
+            const container = document.getElementById('selectedList');
+            const items = Object.entries(selectedItems);
+            
+            document.getElementById('selectedCount').textContent = items.length;
+
+            if (items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <p>No items selected yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = items.map(([name, data]) => `
+                <div class="selected-item">
+                    <div class="selected-item-info">
+                        <div class="selected-item-name">${name}</div>
+                        <div class="selected-item-details">₹${data.price} × ${data.quantity}</div>
+                    </div>
+                    <div class="selected-item-total">₹${data.price * data.quantity}</div>
+                </div>
+            `).join('');
+        }
+
+        // Update total
+        function updateTotal() {
+            const total = Object.values(selectedItems).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('totalAmount').textContent = total;
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('totalItemsCount').textContent = allItems.length;
+            document.getElementById('selectedItemsCount').textContent = Object.keys(selectedItems).length;
+            
+            const total = Object.values(selectedItems).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            document.getElementById('totalAmountDisplay').textContent = total;
+        }
+
+        // Edit item
+        function editItem(name) {
+            const item = allItems.find(i => i.name === name);
+            if (!item) return;
+
+            const newName = prompt('Edit item name:', item.name);
+            const newPrice = prompt('Edit item price:', item.price);
+            
+            if (newName && newPrice && parseFloat(newPrice) > 0) {
+                // Update in selectedItems if it exists
+                if (selectedItems[name]) {
+                    selectedItems[newName] = selectedItems[name];
+                    selectedItems[newName].price = parseFloat(newPrice);
+                    delete selectedItems[name];
+                }
+                
+                item.name = newName;
+                item.price = parseFloat(newPrice);
+                
+                saveData();
+                renderItems();
+                updateSelectedList();
+                updateTotal();
+                updateStats();
+                showNotification('Item updated successfully!', 'success');
+                playClickSound();
+            }
+        }
+
+        // Delete item
+        function deleteItem(name) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                allItems = allItems.filter(item => item.name !== name);
+                delete selectedItems[name];
+                
+                saveData();
+                renderItems();
+                updateSelectedList();
+                updateTotal();
+                updateStats();
+                showNotification('Item deleted successfully!', 'success');
+                playClickSound();
+            }
+        }
+
+        // Generate PDF
+        function generatePDF() {
+            const selectedEntries = Object.entries(selectedItems);
+            if (selectedEntries.length === 0) {
+                showNotification('No items selected for PDF generation', 'error');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Add Hindi font support (using built-in fonts that support Unicode)
+            doc.addFont('https://fonts.gstatic.com/s/notoserif/v21/ga6Iaw1J5X9T9RW6j9bNVls-hfgvz8JcMofYTa32J3uUVJFJ.ttf', 'NotoSerif', 'normal');
+            
+            // Header section - exactly like screenshot
+            doc.setFontSize(28);
+            doc.setTextColor(102, 126, 234);
+            doc.setFont("helvetica", "bold");
+            doc.text("Avinash Sona", 105, 35, { align: "center" });
+            
+            // Date - larger size
+            doc.setFontSize(16);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "normal");
+            const date = new Date().toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            doc.text(`Date: ${date}`, 20, 55);
+            
+            // Table headers - larger size
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            
+            const startY = 75;
+            const lineHeight = 12;
+            
+            doc.text("Item Name", 20, startY);
+            doc.text("Price", 120, startY);
+            doc.text("Qty", 150, startY);
+            doc.text("Total", 170, startY);
+            
+            doc.setLineWidth(0.8);
+            doc.line(20, startY + 3, 190, startY + 3);
+            
+            // Table content - larger size for better readability
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(12);
+            
+            let currentY = startY + 15;
+            let grandTotal = 0;
+            let totalItems = 0;
+            let scannedItems = 0;
+            
+            selectedEntries.forEach(([name, data]) => {
+                const total = data.price * data.quantity;
+                grandTotal += total;
+                totalItems += 1;
+                
+                // Check if this item was scanned
+                const item = allItems.find(i => i.name === name);
+                if (item && item.barcode) {
+                    scannedItems += 1;
+                }
+                
+                // Larger font for item entries
+                doc.setFontSize(14);
+                doc.text(name, 20, currentY);
+                doc.text(`Rs.${data.price}`, 120, currentY);
+                doc.text(data.quantity.toString(), 155, currentY);
+                doc.text(`Rs.${total.toFixed(2)}`, 175, currentY);
+                currentY += lineHeight;
+            });
+            
+            // Separator line
+            currentY += 5;
+            doc.setLineWidth(0.5);
+            doc.line(20, currentY, 190, currentY);
+            
+            // Grand Total - Much larger and prominent
+            currentY += 20;
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(34, 139, 34); // Forest Green color
+            doc.text(`Grand Total: Rs.${grandTotal.toFixed(2)}`, 105, currentY, { align: "center" });
+            
+            // Statistics
+            currentY += 25;
+            doc.setFontSize(12);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "bold");
+            
+            const manualItems = totalItems - scannedItems;
+            
+            doc.text(`Total Items: ${totalItems}`, 20, currentY);
+            currentY += lineHeight;
+            doc.text(`Scanned Items: ${scannedItems}`, 20, currentY);
+            currentY += lineHeight;
+            doc.text(`Manual Items: ${manualItems}`, 20, currentY);
+            
+            const fileName = `Avinash_Sona_Grocery_${date.replace(/\//g, '_')}.pdf`;
+            doc.save(fileName);
+            
+            showNotification('PDF generated successfully!', 'success');
+            playClickSound();
+        }
+
+        // Share on WhatsApp
+        function shareOnWhatsApp() {
+            const selectedEntries = Object.entries(selectedItems);
+            if (selectedEntries.length === 0) {
+                showNotification('No items selected to share', 'error');
+                return;
+            }
+
+            let message = '🛒 *Avinash Sona - Shopping List*\n\n';
+            message += `📅 Date: ${new Date().toLocaleDateString('en-GB')}\n\n`;
+            
+            let grandTotal = 0;
+            let totalItems = 0;
+            let scannedItems = 0;
+            
+            selectedEntries.forEach(([name, data], index) => {
+                const total = data.price * data.quantity;
+                grandTotal += total;
+                totalItems += 1;
+                
+                const item = allItems.find(i => i.name === name);
+                if (item && item.barcode) {
+                    scannedItems += 1;
+                }
+                
+                message += `${index + 1}. ${name}\n`;
+                message += `   ₹${data.price} × ${data.quantity} = ₹${total.toFixed(2)}\n\n`;
+            });
+            
+            const manualItems = totalItems - scannedItems;
+            
+            message += `💰 *Grand Total: ₹${grandTotal.toFixed(2)}*\n\n`;
+            message += `📊 *Statistics:*\n`;
+            message += `• Total Items: ${totalItems}\n`;
+            message += `• Scanned Items: ${scannedItems}\n`;
+            message += `• Manual Items: ${manualItems}`;
+            
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            showNotification('Opening WhatsApp...', 'success');
+            playClickSound();
+        }
+
+        // Clear all selected items
+        function clearAll() {
+            if (Object.keys(selectedItems).length === 0) {
+                showNotification('No items to clear', 'warning');
+                return;
+            }
+
+            if (confirm('Are you sure you want to clear all selected items?')) {
+                selectedItems = {};
+                saveData();
+                renderItems();
+                updateSelectedList();
+                updateTotal();
+                updateStats();
+                showNotification('All items cleared!', 'success');
+                playClickSound();
+            }
+        }
+
+        // Export data
+        function exportData() {
+            const data = {
+                allItems: allItems,
+                selectedItems: selectedItems,
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Avinash_Sona_Grocery_Data_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showNotification('Data exported successfully!', 'success');
+            playClickSound();
+        }
+
+        // Import data
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (data.allItems && Array.isArray(data.allItems)) {
+                        allItems = data.allItems;
+                    }
+                    
+                    if (data.selectedItems && typeof data.selectedItems === 'object') {
+                        selectedItems = data.selectedItems;
+                    }
+                    
+                    saveData();
+                    renderItems();
+                    updateSelectedList();
+                    updateTotal();
+                    updateStats();
+                    
+                    showNotification('Data imported successfully!', 'success');
+                    playClickSound();
+                } catch (err) {
+                    showNotification('Failed to import data. Invalid file format.', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // Initialize app
+        function init() {
+            loadData();
+            renderItems();
+            updateSelectedList();
+            updateTotal();
+            updateStats();
+            
+            // Initialize audio on first user interaction
+            document.addEventListener('click', initAudio, { once: true });
+            document.addEventListener('touchstart', initAudio, { once: true });
+        }
+
+        // Run when page loads
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
