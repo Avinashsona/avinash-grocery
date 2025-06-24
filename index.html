@@ -1571,14 +1571,14 @@ function saveData() {
                 doc.text(itemName, 25, yPos);
                 
                 // Price
-                doc.text(`Rs.${data.price}`, 110, yPos);
+                doc.text(`₹${data.price}`, 110, yPos);
                 
                 // Quantity
                 doc.text(data.quantity.toString(), 135, yPos);
                 
                 // Total
                 doc.setTextColor(40, 167, 69);
-                doc.text(`Rs.${itemTotal.toFixed(2)}`, 155, yPos);
+                doc.text(`₹${itemTotal.toFixed(2)}`, 155, yPos);
 
                 yPos += 12;
                 
@@ -1601,8 +1601,7 @@ function saveData() {
             doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(40, 167, 69);
-            doc.text(`Grand Total: Rs.${totalAmount.toFixed(2)}`, 105, yPos, { align: 'center' });
-
+            doc.text(`Grand Total: ₹${totalAmount.toFixed(2)}`, 105, yPos, { align: 'center' });
 
 
             // Footer
