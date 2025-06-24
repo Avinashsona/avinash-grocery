@@ -981,17 +981,28 @@
         let scanningForNewItem = false;
 
         // Load and save data
-        function loadData() {
-            const saved = localStorage.getItem('selectedItems');
-            if (saved) {
-                selectedItems = JSON.parse(saved);
+function loadData() {
+    const savedAllItems = localStorage.getItem('allItems');
+    if (savedAllItems) {
+        const storedItems = JSON.parse(savedAllItems);
+        storedItems.forEach(stored => {
+            if (!allItems.some(item =>
+                item.name.toLowerCase() === stored.name.toLowerCase())) {
+                allItems.push(stored);
             }
-        }
+        });
+    }
 
-        function saveData() {
-            // Don't save allItems to localStorage to preserve predefined 55+ items
-            localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
-        }
+    const saved = localStorage.getItem('selectedItems');
+    if (saved) {
+        selectedItems = JSON.parse(saved);
+    }
+}
+
+function saveData() {
+    localStorage.setItem('allItems', JSON.stringify(allItems));
+    localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
+}
 
         // Show notification
         function showNotification(message, type = 'success') {
