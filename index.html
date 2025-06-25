@@ -1325,30 +1325,22 @@ function saveData() {
             }
 
             container.innerHTML = filteredItems.map(item => {
-                const isSelected = selectedItems[item.name];
-                const selectedClass = isSelected ? 'selected' : '';
-                const quantity = isSelected ? isSelected.quantity : 0;
+    const isSelected = selectedItems[item.name];
+    const selectedClass = isSelected ? 'selected' : '';
+    const quantity = isSelected ? isSelected.quantity : 0;
 
-                return `
-                    <div class="item ${selectedClass}" onclick="toggleItem('${item.name}', ${item.price})">
-                        <div class="item-info">
-                            <div class="item-name">${item.name}</div>
-                            <div class="item-price">₹${item.price}</div>
-                        </div>
-                        ${isSelected ? `
-                            <div class="quantity-controls">
-                                <button class="quantity-btn" onclick="event.stopPropagation(); updateQuantity('${item.name}', ${quantity - 1})">-</button>
-                                <span class="quantity">${quantity}</span>
-                                <button class="quantity-btn" onclick="event.stopPropagation(); updateQuantity('${item.name}', ${quantity + 1})">+</button>
-                            </div>
-                        ` : ''}
-                        <div class="edit-controls">
-                            <button class="btn-small btn-edit" onclick="event.stopPropagation(); editItem('${item.name}')">Edit</button>
-                            <button class="btn-small btn-delete" onclick="event.stopPropagation(); deleteItem('${item.name}')">Delete</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+    return `
+        <div class="item ${selectedClass}" onclick="toggleItem('${item.name}', ${item.price})">
+            <div class="item-info">
+                <div class="item-name">${item.name}</div>
+                <div class="item-price">₹${item.price}</div>
+            </div>
+            <div class="item-actions">
+                <button onclick="event.stopPropagation(); editItemName('${item.name}')">✏️ Edit Name</button>
+            </div>
+        </div>
+    `;
+}).join('');
         }
 
         // Toggle item selection
@@ -1894,6 +1886,31 @@ function toggleFlashlight() {
 
         // Run when page loads
         window.addEventListener('load', init);
+        function editItemName(itemName) {
+    const index = allItems.findIndex(item => item.name === itemName);
+    if (index !== -1) {
+        const newName = prompt(`Edit name for "${itemName}":`, itemName);
+        if (newName && newName.trim() !== '') {
+            const updatedName = newName.trim();
+
+            // Update in allItems
+            allItems[index].name = updatedName;
+
+            // Update in selectedItems
+            if (selectedItems[itemName]) {
+                selectedItems[updatedName] = selectedItems[itemName];
+                delete selectedItems[itemName];
+            }
+
+            // Save changes
+            localStorage.setItem('allItems', JSON.stringify(allItems));
+            localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
+
+            showNotification('✅ Item name updated!');
+            renderItems();
+        }
+    }
+        }
     </script>
 </body>
 </html>
