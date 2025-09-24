@@ -751,6 +751,31 @@
             background: #ffc107;
             color: #333;
         }
+       /* Brand Logo Styles */
+.brand-logo-container {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.brand-logo-img {
+    max-width: 250px;
+    height: auto;
+    filter: brightness(1.2) contrast(1.1);
+    transition: all 0.3s ease;
+    opacity: 0.95;
+}
+
+.brand-logo-img:hover {
+    transform: scale(1.05);
+    filter: brightness(1.3) contrast(1.2);
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .brand-logo-img {
+        max-width: 200px;
+    }
+} 
     </style>
 </head>
 <body>
@@ -762,9 +787,15 @@
 
     <div class="container">
         <div class="header">
-            <img src="https://firebasestorage.googleapis.com/v0/b/the-bhilai-report-by-avinash.firebasestorage.app/o/quality_restoration_20250527015428730.jpg?alt=media&token=8336a034-60f5-4acc-b845-52d2c4826d86" alt="Avinash Sona" class="profile-photo" onload="this.style.opacity='1'" onerror="this.style.display='none'" style="opacity: 0; transition: opacity 0.3s ease;">
-            <h1>Avinash Sona</h1>
-        </div>
+    <!-- Logo यहां add करें -->
+    <div class="brand-logo-container">
+        <img src="attached_assets/Avinash-2_1758700781952.png" alt="Avinash Sona Logo" class="brand-logo-img">
+    </div>
+    
+    <!-- Profile photo -->
+    <img src="https://firebasestorage.googleapis.com/v0/b/the-bhilai-report-by-avinash.firebasestorage.app/o/quality_restoration_20250527015428730.jpg?alt=media&token=8336a034-60f5-4acc-b845-52d2c4826d86" alt="Avinash Sona" class="profile-photo" onload="this.style.opacity='1'" onerror="this.style.display='none'" style="opacity: 0; transition: opacity 0.3s ease;">
+    <h1>Avinash Sona</h1>
+</div>
 
         <div class="main-content">
             <!-- Statistics -->
