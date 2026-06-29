@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>Ruled Note Bill</title>
+<style>
+body{margin:0;background:#eee;font-family:Arial}
+#page{
+width:800px;max-width:95%;margin:20px auto;padding:40px;
+background:
+repeating-linear-gradient(white 0px,white 31px,#8ec5ff 32px);
+box-shadow:0 0 10px #999;
+}
+h2{margin:0 0 20px}
+input{padding:8px;margin:5px}
+button{padding:8px 14px}
+.line{color:#0b57d0;font-size:22px;height:32px}
+@media print{button,input,h2{display:none} body{background:#fff} #page{box-shadow:none;margin:0}}
+</style></head>
+<body>
+<div id="page">
+<div style="text-align:center;font:600 11px Arial,sans-serif;color:#b8b8b8;letter-spacing:1px;margin:2px 0 10px 0;user-select:none;">This is Avinash Sona System Generated</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px">
+<div></div>
+<div style="font-size:15px">
+<b>Date:</b> <span id="date"></span><br>
+<b>Time:</b> <span id="time"></span>
+</div>
+</div>
+<input id="item" placeholder="सामान">
+<input id="amt" type="number" placeholder="₹">
+<button onclick="add()">Add</button>
+<button onclick="print()">PDF</button>
+<div id="list"></div>
+<div class="line" id="total" style="position:fixed;right:40px;bottom:20px;text-align:right;color:#0b57d0;font-weight:bold;">कुल: ₹0</div>
+</div>
+<script>
+let t=0;
+function add(){
+let i=item.value.trim(),a=parseFloat(amt.value);
+if(!i||isNaN(a))return;
+t+=a;
+let d=document.createElement('div');
+d.className='line';
+d.style.display='flex';
+d.style.justifyContent='space-between';
+d.innerHTML='<span>'+i+'</span><span>₹'+a.toFixed(2)+'</span>';
+list.appendChild(d);
+total.textContent='कुल: ₹'+t.toFixed(2);
+item.value='';amt.value='';
+}
+
+function updateDT(){
+ const n=new Date();
+ document.getElementById('date').textContent=n.toLocaleDateString('en-GB');
+ document.getElementById('time').textContent=n.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+updateDT();
+setInterval(updateDT,1000);
+</script></body></html>
